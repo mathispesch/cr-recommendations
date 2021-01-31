@@ -5,7 +5,7 @@ from flask import Flask, jsonify, request, session
 import tmdb
 
 app = Flask(__name__)
-app.secret_key = os.environ["SECRET"]
+app.secret_key = os.getenv("SECRET")
 
 
 @app.route("/movies")

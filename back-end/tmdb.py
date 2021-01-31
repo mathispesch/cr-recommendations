@@ -3,7 +3,7 @@ import random
 
 import requests
 
-BEARER_TOKEN = os.environ["TMDB_TOKEN"]
+BEARER_TOKEN = os.getenv("TMDB_TOKEN")
 HEADERS = {
     "Authorization": f"Bearer {BEARER_TOKEN}"
 }
