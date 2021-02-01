@@ -2,6 +2,9 @@ import os
 import random
 
 import requests
+from flask.cli import load_dotenv
+
+assert load_dotenv(), "Unable to load .env"
 
 BEARER_TOKEN = os.getenv("TMDB_TOKEN")
 HEADERS = {

@@ -1,9 +1,12 @@
 import os
 
 from flask import Flask, jsonify, request, session
+from flask.cli import load_dotenv
 from flask_cors import CORS
 
 import tmdb
+
+assert load_dotenv(), "Unable to load .env"
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET")
