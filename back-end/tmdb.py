@@ -25,7 +25,7 @@ def get_movies(n, filters=dict):
 
         movies += r.json()["results"]
 
-    movies = random.choices(movies, k=10)
+    movies = random.choices(movies, k=n)
     random.shuffle(movies)
 
     return movies
@@ -33,7 +33,7 @@ def get_movies(n, filters=dict):
 
 def get_movie(_id):
     r = requests.get(
-        f"{BASE_API}/movie/{_id}", headers=HEADERS, params={**PARAMS, "append_to_response": "keywords, credits"}
+        f"{BASE_API}/movie/{_id}", headers=HEADERS, params={**PARAMS, "append_to_response": "keywords,credits"}
     )
     if not r.ok:
         raise Exception("TMDB Error")
