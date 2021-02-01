@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CR-Recommendations</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
+
+    <link type="text/css" href="css/style.css" rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+</head>
+
+<body>
+<main id="movies">
+    <div style="position: absolute; background-image: url('img/background.png'); width: 100%; height: 100%; background-size: cover; background-position: center center; background-repeat: no-repeat; z-index: -2"></div>
+    <div style="position: absolute; width: 100%; height: 100%; background: rgba(0, 0, 0, 0) url('img/noise.png') repeat scroll 0 0; z-index: -1"></div>
+
+    <div class="px-4 pt-4">
+        <div class="row" :data-masonry='{"percentPosition": true }'>
+            <div class="col-6 col-md-3 col-lg-2 mb-4" v-for="movie in movies" :key="movie.id">
+                <div class="card">
+                    <div class="card-overlay-container">
+                        <div class="card-overlay">
+                            <div class="position-absolute top-50 start-50 translate-middle">
+                                <div class="mb-3">
+                                    <button type="button" class="btn btn-circle btn-outline-primary"
+                                            v-on:click="expand(movie, $event)">
+                                        <i class="bi bi-eye-fill"></i>
+                                    </button>
+                                </div>
+                                <div>
+                                    <button type="button" class="btn btn-circle btn-outline-primary"
+                                            v-on:click="choose(movie)">
+                                        <i class="bi bi-arrow-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <img :src="'https://image.tmdb.org/t/p/w500' + movie.poster_path" class="card-img-top">
+                </div>
+                <p class="title m-1">{{movie.title}}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="px-4 mb-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="btn-toolbar float-end">
+                    <button type="button" class="btn btn-primary btn-r-big"
+                            v-on:click="notice=true;console.log(notice)">
+                        Instructions
+                    </button>
+                    <button type="button" class="btn btn-primary" v-on:click="reset">Recommencer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="overlay-container" v-if="details || notice" v-on:click="collapse">
+        <div class="overlay details p-4" v-if="details" v-on:click="$event.stopPropagation();">
+            <div class="row mb-4">
+                <div class="col-12 col-sm-3 mb-3 mb-sm-0">
+                    <img :src="'https://image.tmdb.org/t/p/w500' + details.poster_path" class="card-img-top">
+                </div>
+                <div class="col-9">
+                    <h1>{{details.title}}</h1>
+                    <span style="font-size: 2rem;">
+                        {{details.production_countries.map(c => getFlag(c.iso_3166_1)).join(' ')}}
+                    </span>
+                    <p class="mt-2">{{details.overview}}</p>
+                    <p>Année de sortie : {{moment(details.release_date).format('YYYY')}}</p>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-6 col-sm-3 col-lg-2" v-for="actor in details.credits.cast.slice(0, 6)"
+                     :key="actor.id">
+                    <div class="card h-100" style="background-color: unset">
+                        <img :src="actor.profile_path ? 'https://image.tmdb.org/t/p/w200/' + actor.profile_path : 'https://www.themoviedb.org/assets/2/v4/glyphicons/basic/glyphicons-basic-4-user-grey-d8fe957375e70239d6abdd549fd7568c89281b2179b5f4470e2e12895792dfa5.svg'"
+                             class="card-img-top h-100">
+                        <p class="title m-1">{{actor.name}}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="overlay notice p-4" v-if="notice" v-on:click="$event.stopPropagation();">
+            <h1>Instructions</h1>
+            <p class="mt-4">
+                Cette interface permet de sélectionner des films et de se voir proposer au fur et à mesure des films
+                pertinent en fonction de ceux déjà choisis.
+            </p>
+            <p class="mt-4">
+                <button type="button" class="btn btn-primary btn-r-med">Recommencer</button>
+                permet de recommencer la sélection.
+            </p>
+            <p class="mt-4">
+                <button type="button" class="btn btn-circle btn-outline-primary btn-r-med">
+                    <i class="bi bi-eye-fill"></i>
+                </button>
+                permet de voir les détails d'un film.
+            </p>
+            <p class="mt-4">
+                <button type="button" class="btn btn-circle btn-outline-primary btn-r-med">
+                    <i class="bi bi-arrow-right"></i>
+                </button>
+                permet de sélectionner le film et de se voir proposer 12 nouveaux films dépendant de ce choix et des
+                choix précédents.
+            </p>
+        </div>
+    </div>
+</main>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/masonry-layout@4.2.2/dist/masonry.pkgd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+<script src="js/emoji-flag.js"></script>
+
+<script>
+    const movies = new Vue({
+        el: '#movies',
+        data() {
+            return {
+                movies: [],
+                details: null,
+                notice: false,
+                baseUrl: 'http://localhost:5000/'
+            }
+        },
+        async mounted() {
+            await this.load();
+        }, methods: {
+            load: async function () {
+                this.movies = [];
+                const {data} = await axios.get(this.baseUrl + 'movies')
+                this.movies = data.movies;
+            },
+            expand: async function (movie, e) {
+                document.body.style.overflow = 'hidden';
+                const {data} = await axios.get(this.baseUrl + 'details/' + movie.id);
+                this.details = data.details;
+                e.stopPropagation();
+            },
+            collapse: async function (movie) {
+                document.body.style.overflow = 'unset';
+                this.details = null;
+                this.notice = false;
+            },
+            choose: async function (movie) {
+                const response = await axios.post(this.baseUrl + 'choice', {choice: movie.id});
+                await this.load();
+            },
+            reset: async function () {
+                await axios.post(this.baseUrl + 'reset');
+                await this.load();
+            },
+        }
+    })
+</script>
+</body>
+</html>
+
