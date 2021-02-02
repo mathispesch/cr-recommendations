@@ -138,7 +138,6 @@
                 movies: [],
                 details: null,
                 notice: false,  // Switch to true to have the instructions show up on page opening
-                baseUrl: 'http://localhost:5000/'
             }
         },
         async mounted() {
@@ -146,12 +145,12 @@
         }, methods: {
             load: async function () {
                 this.movies = [];
-                const {data} = await axios.get(this.baseUrl + 'movies')
+                const {data} = await axios.get('/api/movies')
                 this.movies = data.movies;
             },
             expand: async function (movie, e) {
                 document.body.style.overflow = 'hidden';
-                const {data} = await axios.get(this.baseUrl + 'details/' + movie.id);
+                const {data} = await axios.get('/api/details/' + movie.id);
                 this.details = data.details;
                 e.stopPropagation();
             },
@@ -161,11 +160,11 @@
                 this.notice = false;
             },
             choose: async function (movie) {
-                const response = await axios.post(this.baseUrl + 'choice', {choice: movie.id});
+                const response = await axios.post('/api/choice', {choice: movie.id});
                 await this.load();
             },
             reset: async function () {
-                await axios.post(this.baseUrl + 'reset');
+                await axios.post('/api/reset');
                 await this.load();
             },
         }

@@ -8,12 +8,17 @@ import tmdb
 
 assert load_dotenv(), "Unable to load .env"
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='')
 app.secret_key = os.getenv("SECRET")
 CORS(app, resources={r"/*": {"origins": "*"}})
 
 
-@app.route("/movies")
+@app.route("/")
+def get_app():
+    return app.send_static_file("index.html")
+
+
+@app.route("/api/movies")
 def get_n():
     n = request.args.get("n", 12)
     if not (5 < n < 20):
@@ -29,7 +34,7 @@ def get_n():
     return jsonify({"success": True, "movies": movies})
 
 
-@app.route("/choice", methods=["POST"])
+@app.route("/api/choice", methods=["POST"])
 def post_choice():
     if not request.json or "choice" not in request.json:
         return jsonify({"success": False, "error": "You must submit a movie choice."}), 400
@@ -42,12 +47,12 @@ def post_choice():
     return jsonify({"success": True})
 
 
-@app.route("/details/<_id>")
+@app.route("/api/details/<_id>")
 def get_details(_id):
     return jsonify({"success": True, "details": tmdb.get_movie(_id)})
 
 
-@app.route("/reset", methods=["POST"])
+@app.route("/api/reset", methods=["POST"])
 def reset():
     if "choices" in session:
         session.pop("choices")
