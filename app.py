@@ -36,7 +36,14 @@ def get_n():
         movies = tmdb.get_movies(n)
     else:
         # The user has already choosen at least one movie
-        movies = tmdb.get_movies(n)  # TODO: search and choose relevant movies
+        params = {
+            "seen": session["seen"],
+            "genres": session["genres"],
+            "keywords": session["keywords"],
+            "cast": session["cast"],
+            "crew": session["crew"],
+        }
+        movies = tmdb.get_recommendations(n, params)  # TODO: search and choose relevant movies
 
     session["current_ids"] = [m["id"] for m in movies]
 
@@ -52,7 +59,7 @@ def post_choice():
     movie = _get_movie(chosen_id)
     genres = [el["id"] for el in movie["genres"]]
     keywords = [el["id"] for el in movie["keywords"]["keywords"]]
-    casting = [el["id"] for el in movie["credits"]["cast"] if el["order"] <= 3]
+    cast = [el["id"] for el in movie["credits"]["cast"] if el["order"] <= 3]
     crew = [el["id"] for el in movie["credits"]["crew"] if
             (el["job"], el["department"]) == ("Director", "Directing")]
 
@@ -60,7 +67,7 @@ def post_choice():
     session["seen"] = list(set(session.get("seen", []) + session.get("current_ids", [])))
     session["genres"] = list(set(session.get("genres", []) + genres))
     session["keywords"] = list(set(session.get("keywords", []) + keywords))
-    session["casting"] = list(set(session.get("casting", []) + casting))
+    session["cast"] = list(set(session.get("cast", []) + cast))
     session["crew"] = list(set(session.get("crew", []) + crew))
 
     return jsonify({"success": True})
@@ -81,8 +88,8 @@ def reset():
         session.pop("current_ids")
     if "genres" in session:
         session.pop("genres")
-    if "casting" in session:
-        session.pop("casting")
+    if "cast" in session:
+        session.pop("cast")
     if "keywords" in session:
         session.pop("keywords")
     if "crew" in session:
