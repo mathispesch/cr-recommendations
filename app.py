@@ -3,6 +3,7 @@ import os
 from flask import Flask, jsonify, request, session
 from flask.cli import load_dotenv
 from flask_cors import CORS
+from flask_caching import Cache
 
 import tmdb
 
@@ -10,7 +11,13 @@ assert load_dotenv(), "Unable to load .env"
 
 app = Flask(__name__, static_url_path='')
 app.secret_key = os.getenv("SECRET")
+cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 CORS(app, resources={r"/*": {"origins": "*"}})
+
+
+@cache.memoize()
+def _get_movie(_id):
+    return tmdb.get_movie(_id)
 
 
 @app.route("/")
@@ -31,6 +38,8 @@ def get_n():
         # The user has already choosen at least one movie
         movies = tmdb.get_movies(n)  # TODO: search and choose relevant movies
 
+    session["current_ids"] = [m["id"] for m in movies]
+
     return jsonify({"success": True, "movies": movies})
 
 
@@ -39,22 +48,44 @@ def post_choice():
     if not request.json or "choice" not in request.json:
         return jsonify({"success": False, "error": "You must submit a movie choice."}), 400
 
-    if "choices" not in session:
-        session["choices"] = []
+    chosen_id = request.json["choice"]
+    movie = _get_movie(chosen_id)
+    genres = [el["id"] for el in movie["genres"]]
+    keywords = [el["id"] for el in movie["keywords"]["keywords"]]
+    casting = [el["id"] for el in movie["credits"]["cast"] if el["order"] <= 3]
+    crew = [el["id"] for el in movie["credits"]["crew"] if
+            (el["job"], el["department"]) == ("Director", "Directing")]
 
-    session["choices"] = session["choices"] + [request.json["choice"]]
+    session["choices"] = session.get("choices", []) + [chosen_id]
+    session["seen"] = list(set(session.get("seen", []) + session.get("current_ids", [])))
+    session["genres"] = list(set(session.get("genres", []) + genres))
+    session["keywords"] = list(set(session.get("keywords", []) + keywords))
+    session["casting"] = list(set(session.get("casting", []) + casting))
+    session["crew"] = list(set(session.get("crew", []) + crew))
 
     return jsonify({"success": True})
 
 
 @app.route("/api/details/<_id>")
 def get_details(_id):
-    return jsonify({"success": True, "details": tmdb.get_movie(_id)})
+    return jsonify({"success": True, "details": _get_movie(_id)})
 
 
 @app.route("/api/reset", methods=["POST"])
 def reset():
     if "choices" in session:
         session.pop("choices")
+    if "seen" in session:
+        session.pop("seen")
+    if "current_ids" in session:
+        session.pop("current_ids")
+    if "genres" in session:
+        session.pop("genres")
+    if "casting" in session:
+        session.pop("casting")
+    if "keywords" in session:
+        session.pop("keywords")
+    if "crew" in session:
+        session.pop("crew")
 
     return jsonify({"success": True})
