@@ -1,5 +1,5 @@
 flask
-flask-cache
+flask-caching
 flask-cors
 gunicorn
 python-dotenv
