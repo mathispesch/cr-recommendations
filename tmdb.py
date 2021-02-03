@@ -44,9 +44,9 @@ def get_movie(_id):
     return r.json()
 
 
-def get_movies_filtered(with_crew=None, with_cast=None, with_people=None, with_keywords=None, with_genres=None):
+def get_movies_filtered(with_crew=None, with_cast=None, with_people=None, with_keywords=None, with_genres=None, page=1):
     s = requests.session()
-    filters = {}
+    filters = {"page": page}
 
     if with_crew:
         filters["with_crew"] = "|".join([str(el) for el in with_crew])
@@ -72,25 +72,37 @@ def get_recommendations(n, params):
 
     if params.get("genres", []):
         results = get_movies_filtered(with_genres=params["genres"])
+        results = list(filter(lambda m: m["id"] not in params.get("seen", []), results))
+        if len(results) < 10:
+            results = get_movies_filtered(with_genres=params["genres"], page=2)
         movies += results
 
     if params.get("keywords", []):
         results = get_movies_filtered(with_keywords=params["keywords"])
+        results = list(filter(lambda m: m["id"] not in params.get("seen", []), results))
+        if len(results) < 10:
+            results = get_movies_filtered(with_keywords=params["keywords"], page=2)
         movies += results
 
     if params.get("cast", []):
         results = get_movies_filtered(with_cast=params["cast"])
+        results = list(filter(lambda m: m["id"] not in params.get("seen", []), results))
+        if len(results) < 10:
+            results = get_movies_filtered(with_cast=params["cast"], page=2)
         movies += results
 
     if params.get("crew", []):
         results = get_movies_filtered(with_crew=params["crew"])
+        results = list(filter(lambda m: m["id"] not in params.get("seen", []), results))
+        if len(results) < 10:
+            results = get_movies_filtered(with_crew=params["crew"], page=2)
         movies += results
 
     movies = list(filter(lambda m: m["id"] not in params.get("seen", []), movies))
 
     if len(movies) < n:
         # Add movies if there is not enough
-        movies += get_movies(n)
+        movies += random.sample(get_movies(2*n), n)
         # Filter to remove movies already seen
         movies = list(filter(lambda m: m["id"] not in params.get("seen", []), movies))
 
