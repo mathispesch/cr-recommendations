@@ -25,6 +25,7 @@ BASE_API = "https://api.themoviedb.org/3/"
 
 
 def get_movies(n):
+    """Get n popular movies."""
     s = requests.session()
     movies = []
     for i in range(3 * n // 20 + 1):
@@ -41,6 +42,7 @@ def get_movies(n):
 
 
 def get_movie(_id):
+    """Get the details of a specific movie."""
     r = requests.get(
         f"{BASE_API}/movie/{_id}", headers=HEADERS, params={**PARAMS, "append_to_response": "credits"}
     )
@@ -51,6 +53,7 @@ def get_movie(_id):
 
 
 def get_movies_filtered(with_people=None, with_genres=None, page=1):
+    """Get movies with filters based on people (cast and crew) and genres."""
     s = requests.session()
     filters = {"page": page}
 
@@ -69,34 +72,38 @@ def get_movies_filtered(with_people=None, with_genres=None, page=1):
 
 
 def get_recommendations(n, params):
+    """Get n movie recommendations.
+
+    This retrieves movies based on some filters (cast, crew and genres) and adds other movies and some
+    movies that have already been presented to the user.
+    """
     movies = []
+    seen_movies = []
 
     seen = params.get("seen", [])
 
     if params.get("genres"):
         current_page = 1
         max_page = 2
-        results = []
-        while current_page <= max_page and len(results) < 12:
-            results, max_page = get_movies_filtered(with_genres=params["genres"], page=current_page)
-            results = list(filter(lambda m: m["id"] not in seen, results))
+        new_results = 0
+        while current_page <= max_page and new_results < 12:
+            page_results, max_page = get_movies_filtered(with_genres=params["genres"], page=current_page)
             current_page += 1
-            movies += results
+            new_results += len([1 for r in page_results if r["id"] not in seen])
+            movies += page_results
 
     if params.get("cast") or params.get("crew"):
         people = params.get("cast", []) + params.get("crew", [])
         current_page = 1
         max_page = 2
-        results = []
-        while current_page <= max_page and len(results) < 12:
-            results, max_page = get_movies_filtered(with_people=people)
-            results = list(filter(lambda m: m["id"] not in seen, results))
+        new_results = 0
+        while current_page <= max_page and new_results < 12:
+            page_results, max_page = get_movies_filtered(with_people=people)
             current_page += 1
-            movies += results
+            new_results += len([1 for r in page_results if r["id"] not in seen])
+            movies += page_results
 
-    movies = list(filter(lambda m: m["id"] not in seen, movies))
-
-    if len(movies) < n:
+    if len([1 for m in movies if m["id"] not in seen]) < n:
         current_page = 1
         max_page = 2
         results = []
@@ -106,10 +113,10 @@ def get_recommendations(n, params):
             current_page += 1
             movies += results
 
-    # Remove duplicates
+    # Remove duplicates and movies that have already been chosen
     filtered_movies = []
-    for movie in movies:
-        if movie["id"] not in [m["id"] for m in filtered_movies]:
+    for movie in movies + seen_movies:
+        if movie["id"] not in [m["id"] for m in filtered_movies] and movie["id"] not in params["choices"]:
             filtered_movies.append(movie)
 
     p = [1 if m["id"] in seen else 10 for m in filtered_movies]
