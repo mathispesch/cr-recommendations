@@ -1,28 +1,35 @@
-# CR-Recommendations
+# Connaissances et Raisonnement | Système de Recommandation de Films
+
+## Description du projet
+
+## Descriptif technique
+
+### Arborescence du projet
 
 ```
 .
-├── static      Vue front-end
-├── app.py      Flask app
-└── tmdb.py     TMDB wrapper
+├── static      Interface en Vue.js
+├── app.py      Application Web développée en Flask
+└── tmdb.py     Module pour faire des requêtes TMDB
 ```
 
-## How to run
+### Lancer le projet en local
 
-1. Install the requirements:
+1. Installer les dépendances :
     ```
     pip install -r requirements.txt
     ```
 
-2. Set-up the environment variables:
-   1. Copy the `.env.template` file to a new `.env` file.
-   2. Populate the `SECRET` and `TMDB_TOKEN` (bearer token) variables.
+2. Paramétrer les variables d'environnement :
+   1. Copier le fichier `.env.template` dans un fichier `.env`.
+   2. Remplir les variables `SECRET` et `TMDB_TOKEN` (clé d'API).
 
-3. Run the Flask app with:
+3. Lancer l'application Flask en tapant dans un terminal :
+   - en mode développement
+   ```
+   FLASK_APP=app.py flask run
+   ```
+   - ou en mode production
     ```
-    gunicorn --bind <ADDRESS>:<PORT> wsgi:app
+    gunicorn --bind 0.0.0.0:5000 wsgi:app
     ```
-    
-    example:
-    `gunicorn --bind 0.0.0.0:5000 wsgi:app`
-    will listen on all interfaces on port `5000`
