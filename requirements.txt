@@ -1,6 +1,7 @@
 flask
 flask-caching
 flask-cors
+numpy
 gunicorn
 python-dotenv
 requests

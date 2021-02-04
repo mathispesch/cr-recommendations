@@ -39,11 +39,10 @@ def get_n():
         params = {
             "seen": session["seen"],
             "genres": session["genres"],
-            "keywords": session["keywords"],
             "cast": session["cast"],
             "crew": session["crew"],
         }
-        movies = tmdb.get_recommendations(n, params)  # TODO: search and choose relevant movies
+        movies = tmdb.get_recommendations(n, params)
 
     session["current_ids"] = [m["id"] for m in movies]
 
@@ -58,7 +57,6 @@ def post_choice():
     chosen_id = request.json["choice"]
     movie = _get_movie(chosen_id)
     genres = [el["id"] for el in movie["genres"]]
-    keywords = [el["id"] for el in movie["keywords"]["keywords"]]
     cast = [el["id"] for el in movie["credits"]["cast"] if el["order"] <= 3]
     crew = [el["id"] for el in movie["credits"]["crew"] if
             (el["job"], el["department"]) == ("Director", "Directing")]
@@ -66,9 +64,13 @@ def post_choice():
     session["choices"] = session.get("choices", []) + [chosen_id]
     session["seen"] = list(set(session.get("seen", []) + session.get("current_ids", [])))
     session["genres"] = list(set(session.get("genres", []) + genres))
-    session["keywords"] = list(set(session.get("keywords", []) + keywords))
-    session["cast"] = list(set(session.get("cast", []) + cast))
     session["crew"] = list(set(session.get("crew", []) + crew))
+
+    # Do not use the cast of animated movies
+    if "Animation" not in [g["name"] for g in movie["genres"]]:
+        session["cast"] = list(set(session.get("cast", []) + cast))
+    else:
+        session["cast"] = session.get("cast", [])
 
     return jsonify({"success": True})
 
@@ -80,19 +82,7 @@ def get_details(_id):
 
 @app.route("/api/reset", methods=["POST"])
 def reset():
-    if "choices" in session:
-        session.pop("choices")
-    if "seen" in session:
-        session.pop("seen")
-    if "current_ids" in session:
-        session.pop("current_ids")
-    if "genres" in session:
-        session.pop("genres")
-    if "cast" in session:
-        session.pop("cast")
-    if "keywords" in session:
-        session.pop("keywords")
-    if "crew" in session:
-        session.pop("crew")
+    for k in list(session.keys()):
+        session.pop(k)
 
     return jsonify({"success": True})

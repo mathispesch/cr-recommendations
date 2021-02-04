@@ -1,6 +1,8 @@
+import datetime
 import os
 import random
 
+import numpy
 import requests
 from flask.cli import load_dotenv
 
@@ -12,7 +14,11 @@ HEADERS = {
 }
 PARAMS = {
     "language": "fr-FR",
-    "region": "FR"
+    "region": "FR",
+}
+DISCOVER_PARAMS = {
+    "with_runtime.gte": 15,
+    "release_date.lte": datetime.date.today().isoformat(),
 }
 
 BASE_API = "https://api.themoviedb.org/3/"
@@ -22,21 +28,21 @@ def get_movies(n):
     s = requests.session()
     movies = []
     for i in range(3 * n // 20 + 1):
-        r = s.get(f"{BASE_API}/discover/movie", headers=HEADERS, params={**PARAMS, "page": i + 1})
+        r = s.get(f"{BASE_API}/discover/movie", headers=HEADERS, params={**PARAMS, **DISCOVER_PARAMS, "page": i + 1})
         if not r.ok:
             print(r.json())
             raise Exception("TMDB Error")
 
         movies += r.json()["results"]
 
-    movies = random.sample(movies, n)
+    movies = random.sample(movies, min(len(movies), n))
 
     return movies
 
 
 def get_movie(_id):
     r = requests.get(
-        f"{BASE_API}/movie/{_id}", headers=HEADERS, params={**PARAMS, "append_to_response": "keywords,credits"}
+        f"{BASE_API}/movie/{_id}", headers=HEADERS, params={**PARAMS, "append_to_response": "credits"}
     )
     if not r.ok:
         raise Exception("TMDB Error")
@@ -44,22 +50,16 @@ def get_movie(_id):
     return r.json()
 
 
-def get_movies_filtered(with_crew=None, with_cast=None, with_people=None, with_keywords=None, with_genres=None, page=1):
+def get_movies_filtered(with_people=None, with_genres=None, page=1):
     s = requests.session()
     filters = {"page": page}
 
-    if with_crew:
-        filters["with_crew"] = "|".join([str(el) for el in with_crew])
-    if with_cast:
-        filters["with_cast"] = "|".join([str(el) for el in with_cast])
     if with_people:
         filters["with_people"] = "|".join([str(el) for el in with_people])
-    if with_keywords:
-        filters["with_keywords"] = "|".join([str(el) for el in with_keywords])
     if with_genres:
         filters["with_genres"] = "|".join([str(el) for el in with_genres])
 
-    r = s.get(f"{BASE_API}/discover/movie", headers=HEADERS, params={**PARAMS, **filters})
+    r = s.get(f"{BASE_API}/discover/movie", headers=HEADERS, params={**PARAMS, **DISCOVER_PARAMS, **filters})
     if not r.ok:
         print(r.json())
         raise Exception("TMDB Error")
@@ -70,42 +70,44 @@ def get_movies_filtered(with_crew=None, with_cast=None, with_people=None, with_k
 def get_recommendations(n, params):
     movies = []
 
-    if params.get("genres", []):
+    seen = params.get("seeen", [])
+
+    if params.get("genres"):
         results = get_movies_filtered(with_genres=params["genres"])
-        results = list(filter(lambda m: m["id"] not in params.get("seen", []), results))
+        results = list(filter(lambda m: m["id"] not in seen, results))
         if len(results) < 10:
             results = get_movies_filtered(with_genres=params["genres"], page=2)
         movies += results
 
-    if params.get("keywords", []):
-        results = get_movies_filtered(with_keywords=params["keywords"])
-        results = list(filter(lambda m: m["id"] not in params.get("seen", []), results))
+    if params.get("cast") or params.get("crew"):
+        people = params.get("cast", []) + params.get("crew", [])
+        results = get_movies_filtered(with_people=people)
+        results = list(filter(lambda m: m["id"] not in seen, results))
         if len(results) < 10:
-            results = get_movies_filtered(with_keywords=params["keywords"], page=2)
+            results = get_movies_filtered(with_people=people, page=2)
         movies += results
 
-    if params.get("cast", []):
-        results = get_movies_filtered(with_cast=params["cast"])
-        results = list(filter(lambda m: m["id"] not in params.get("seen", []), results))
-        if len(results) < 10:
-            results = get_movies_filtered(with_cast=params["cast"], page=2)
-        movies += results
-
-    if params.get("crew", []):
-        results = get_movies_filtered(with_crew=params["crew"])
-        results = list(filter(lambda m: m["id"] not in params.get("seen", []), results))
-        if len(results) < 10:
-            results = get_movies_filtered(with_crew=params["crew"], page=2)
-        movies += results
-
-    movies = list(filter(lambda m: m["id"] not in params.get("seen", []), movies))
+    movies = list(filter(lambda m: m["id"] not in seen, movies))
 
     if len(movies) < n:
         # Add movies if there is not enough
-        movies += random.sample(get_movies(2*n), n)
+        other_movies = get_movies(2 * n)
+        movies += random.sample(other_movies, min(len(other_movies), n))
         # Filter to remove movies already seen
-        movies = list(filter(lambda m: m["id"] not in params.get("seen", []), movies))
+        movies = list(filter(lambda m: m["id"] not in seen, movies))
 
-    # TODO Remove duplicates
-    movies = random.sample(movies, n)
-    return movies
+    # Remove duplicates
+    filtered_movies = []
+    for movie in movies:
+        if movie["id"] not in [m["id"] for m in filtered_movies]:
+            filtered_movies.append(movie)
+
+    p = [0.5 if m["id"] in seen else 1 for m in filtered_movies]
+    filtered_movies = numpy.random.choice(
+        filtered_movies,
+        size=min(len(filtered_movies), n),
+        replace=False,
+        p=[el / sum(p) for el in p]
+    ).tolist()
+
+    return filtered_movies
