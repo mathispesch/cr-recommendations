@@ -1,5 +1,7 @@
 # Connaissances et Raisonnement | Système de Recommandation de Films
 
+L'application est disponible aux adresses suivantes : [cr.pesch.fr](https://cr.pesch.fr/) et [cr.pebernard.tk](https://cr.pebernard.tk).
+
 ## Description du projet
 
 ### Concept de l'application
@@ -21,7 +23,6 @@ Vous pouvez ensuite répéter le processus jusqu'à trouver un film qui vous pla
 Nous avons utilisé l'API de [The Movie Database (_TMDb_)](https://www.themoviedb.org/) accessible [ici](https://www.themoviedb.org/documentation/api).
 _TMDb_ est une base de données communautaire de films et de séries TV. 
 Les données relatives aux films et séries TV ont été ajoutées par l'ensemble des membres de la communauté.
-
 
 ### Principe de recommandation
 
