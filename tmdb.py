@@ -97,11 +97,14 @@ def get_recommendations(n, params):
     movies = list(filter(lambda m: m["id"] not in seen, movies))
 
     if len(movies) < n:
-        # Add movies if there is not enough
-        other_movies = get_movies(2 * n)
-        movies += random.sample(other_movies, min(len(other_movies), n))
-        # Filter to remove movies already seen
-        movies = list(filter(lambda m: m["id"] not in seen, movies))
+        current_page = 1
+        max_page = 2
+        results = []
+        while current_page <= max_page and len(results) < 12:
+            results, max_page = get_movies_filtered()
+            results = list(filter(lambda m: m["id"] not in seen, results))
+            current_page += 1
+            movies += results
 
     # Remove duplicates
     filtered_movies = []
@@ -109,7 +112,7 @@ def get_recommendations(n, params):
         if movie["id"] not in [m["id"] for m in filtered_movies]:
             filtered_movies.append(movie)
 
-    p = [1 if m["id"] in seen else 20 for m in filtered_movies]
+    p = [1 if m["id"] in seen else 1000 for m in filtered_movies]
     filtered_movies = numpy.random.choice(
         filtered_movies,
         size=min(len(filtered_movies), n),
