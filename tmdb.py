@@ -64,7 +64,8 @@ def get_movies_filtered(with_people=None, with_genres=None, page=1):
         print(r.json())
         raise Exception("TMDB Error")
 
-    return r.json()["results"]
+    result = r.json()
+    return result["results"], result["total_pages"]
 
 
 def get_recommendations(n, params):
@@ -73,19 +74,25 @@ def get_recommendations(n, params):
     seen = params.get("seeen", [])
 
     if params.get("genres"):
-        results = get_movies_filtered(with_genres=params["genres"])
-        results = list(filter(lambda m: m["id"] not in seen, results))
-        if len(results) < 10:
-            results = get_movies_filtered(with_genres=params["genres"], page=2)
-        movies += results
+        current_page = 1
+        max_page = 2
+        results = []
+        while current_page <= max_page and len(results) < 12:
+            results, max_page = get_movies_filtered(with_genres=params["genres"], page=current_page)
+            results = list(filter(lambda m: m["id"] not in seen, results))
+            current_page += 1
+            movies += results
 
     if params.get("cast") or params.get("crew"):
         people = params.get("cast", []) + params.get("crew", [])
-        results = get_movies_filtered(with_people=people)
-        results = list(filter(lambda m: m["id"] not in seen, results))
-        if len(results) < 10:
-            results = get_movies_filtered(with_people=people, page=2)
-        movies += results
+        current_page = 1
+        max_page = 2
+        results = []
+        while current_page <= max_page and len(results) < 12:
+            results, max_page = get_movies_filtered(with_people=people)
+            results = list(filter(lambda m: m["id"] not in seen, results))
+            current_page += 1
+            movies += results
 
     movies = list(filter(lambda m: m["id"] not in seen, movies))
 
@@ -102,7 +109,7 @@ def get_recommendations(n, params):
         if movie["id"] not in [m["id"] for m in filtered_movies]:
             filtered_movies.append(movie)
 
-    p = [0.5 if m["id"] in seen else 1 for m in filtered_movies]
+    p = [1 if m["id"] in seen else 20 for m in filtered_movies]
     filtered_movies = numpy.random.choice(
         filtered_movies,
         size=min(len(filtered_movies), n),
