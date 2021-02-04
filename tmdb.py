@@ -71,7 +71,7 @@ def get_movies_filtered(with_people=None, with_genres=None, page=1):
 def get_recommendations(n, params):
     movies = []
 
-    seen = params.get("seeen", [])
+    seen = params.get("seen", [])
 
     if params.get("genres"):
         current_page = 1
@@ -112,7 +112,7 @@ def get_recommendations(n, params):
         if movie["id"] not in [m["id"] for m in filtered_movies]:
             filtered_movies.append(movie)
 
-    p = [1 if m["id"] in seen else 1000 for m in filtered_movies]
+    p = [1 if m["id"] in seen else 10 for m in filtered_movies]
     filtered_movies = numpy.random.choice(
         filtered_movies,
         size=min(len(filtered_movies), n),
