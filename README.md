@@ -28,6 +28,8 @@ Nous avons utilisé l'API de [The Movie Database (_TMDb_)](https://www.themovied
 _TMDb_ est une base de données communautaire de films et de séries TV. 
 Les données relatives aux films et séries TV ont été ajoutées par l'ensemble des membres de la communauté.
 
+L'ensemble de l'API est accessible gratuitement et sans limite pour tous les usages non-commerciaux et permet aussi de récupérer les images de couverture pour les films.
+
 Nous récupérons des données en faisant des requêtes à l'API à l'aide du module `requests` de Python.
 
 Les données que nous récupérons sont au format _JSON_. Par exemple, les listes de films ont la forme suivante :
@@ -57,7 +59,19 @@ Les données que nous récupérons sont au format _JSON_. Par exemple, les liste
 
 ### Principe de recommandation
 
-L'application utilise les acteurs et le réalisateur des derniers choix ainsi que les genres pour trouver de nouvelles propositions.
+1. À l'arrivée sur l'application, 12 films sont affichés. 
+   Ces films sont choisis aléatoirement parmi la centaine de films les plus populaires au moment de la requête.
+   
+2. L'utilisateur peut consulter les détails pour chacun de ces 12 films et faire un choix pour continuer.
+   Il peut s'agir d'un film que l'utilisateur a déjà vu ou aimé ou bien d'un film qui lui plaît.
+   
+3. L'application extrait le ou les réalisateurs du film choisi, les acteurs qui jouent et les genres associés 
+   et recherche un ensemble de films qui présentent des similarités. 
+   Il peut s'agir de films réalisés par la même personne, ou avec des acteurs en commun ou encore avec le ou les mêmes genres.
+   
+4. Les nouvelles propositions sont réduites au nombre de 12 en donnant des poids plus faibles aux films qui ont déjà été affichés lors du parcours utilisateur.
+   
+4. L'utilisateur peut continuer ce processus jusqu'à trouver un film.
 
 ## Descriptif technique
 
@@ -66,7 +80,7 @@ Le code de l'application est disponible sur [GitHub](https://github.com/mathispe
 Au niveau technique, nous avons programmé en _Python_ (avec _Flask_ notamment) et utilisé le framework Javascript
 [_Vue.js_](https://vuejs.org/) afin de développer l'interface web.
 
-### Arborescence du projet
+### Arborescence du projet (fichiers principaux)
 
 ```
 .
