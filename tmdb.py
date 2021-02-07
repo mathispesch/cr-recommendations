@@ -28,7 +28,7 @@ def get_movies(n):
     """Get n popular movies."""
     s = requests.session()
     movies = []
-    for i in range(3 * n // 20 + 1):
+    for i in range(6 * n // 20 + 1):
         r = s.get(f"{BASE_API}/discover/movie", headers=HEADERS, params={**PARAMS, **DISCOVER_PARAMS, "page": i + 1})
         if not r.ok:
             print(r.json())
