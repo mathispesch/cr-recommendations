@@ -6,17 +6,21 @@ L'application est disponible aux adresses suivantes : [cr.pesch.fr](https://cr.p
 
 ### Concept de l'application
 
+L'application permet de sélectionner des films et de se voir proposer au fur et à mesure des films pertinents en fonction de ceux déjà choisis.
+
 Dès l'arrivée sur l'application, 12 films sont affichés. 
-Pour chacun d'entre eux vous pouvez consulter entre autres :
+
+Pour chacun d'entre eux il est possible de consulter entre autres :
 - Un court résumé du film
-- Les genres associés à ce film
 - La durée du film
+- L'année de sortie du film
+- Les genres associés à ce film
 - Le(s) réalisateur(s) du film
 - Le casting du film
 
-Vous pouvez ensuite choisir un film en cliquant sur la flèche. 
-12 nouveaux films dérivés de votre choix vous seront ainsi proposés. 
-Vous pouvez ensuite répéter le processus jusqu'à trouver un film qui vous plaît.
+Il est ensuite possible de choisir un film en cliquant sur la flèche : 12 nouveaux films dérivés de ce choix seront ensuite proposés.
+
+Le processus peut ensuite être répété jusqu'à trouver un film qui plaît à l'utilisateur.
 
 ### Base de connaissances sur les films
 
@@ -26,9 +30,11 @@ Les données relatives aux films et séries TV ont été ajoutées par l'ensembl
 
 ### Principe de recommandation
 
-
+L'application utilise les acteurs et le réalisateur des derniers choix ainsi que les genres pour trouver de nouvelles propositions.
 
 ## Descriptif technique
+
+Le code de l'application est disponible sur [GitHub](https://github.com/mathispesch/cr-recommendations).
 
 Au niveau technique, nous avons programmé en _Python_ (avec _Flask_ notamment) et utilisé le framework Javascript
 [_Vue.js_](https://vuejs.org/) afin de développer l'interface web.
