@@ -82,23 +82,23 @@ def get_recommendations(n, params):
 
     seen = params.get("seen", [])
 
-    if params.get("genres"):
-        current_page = 1
-        max_page = 2
-        new_results = 0
-        while current_page <= max_page and new_results < 12:
-            page_results, max_page = get_movies_filtered(with_genres=params["genres"], page=current_page)
-            current_page += 1
-            new_results += len([1 for r in page_results if r["id"] not in seen])
-            movies += page_results
-
     if params.get("cast") or params.get("crew"):
         people = params.get("cast", []) + params.get("crew", [])
         current_page = 1
         max_page = 2
         new_results = 0
-        while current_page <= max_page and new_results < 12:
+        while current_page <= max_page and new_results < 20:
             page_results, max_page = get_movies_filtered(with_people=people)
+            current_page += 1
+            new_results += len([1 for r in page_results if r["id"] not in seen])
+            movies += page_results
+
+    if params.get("genres"):
+        current_page = 1
+        max_page = 2
+        new_results = 0
+        while current_page <= max_page and new_results < 10:
+            page_results, max_page = get_movies_filtered(with_genres=params["genres"], page=current_page)
             current_page += 1
             new_results += len([1 for r in page_results if r["id"] not in seen])
             movies += page_results
